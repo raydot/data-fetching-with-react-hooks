@@ -1,36 +1,17 @@
+// Let's move all of this stuff into a function
+
 import React, { Fragment, useState, useEffect } from 'react';
 import axios from 'axios';
 
-function DataAndForms() {
-  const [data, setData] = useState({ hits: [] });
+function CustomDataFetchHook() {
   const [query, setQuery] = useState('redux');
-  const [url, setUrl] = useState(
-    'https://hn.algolia.com/api/v1/search?query=redux'
-  );
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsError(false);
-      setIsLoading(true);
-
-      try {
-        const result = await axios(url);
-        setData(result.data);
-      } catch (error) {
-        setIsError(true);
-      }
-      setIsLoading(false);
-    };
-    fetchData();
-  }, [url]);
+  const [{ data, isLoading, isError }, doFetch] = useHackerNewsApi();
 
   return (
     <Fragment>
       <form
         onSubmit={(event) => {
-          setUrl(`https://hn.algolia.com/api/v1/search?query=${query}`);
+          doFetch(`https://hn.algolia.com/api/v1/search?query=${query}`);
 
           event.preventDefault();
         }}
@@ -64,4 +45,32 @@ function DataAndForms() {
   );
 }
 
-export default DataAndForms;
+export default CustomDataFetchHook;
+
+const useHackerNewsApi = () => {
+  const [data, setData] = useState({ hits: [] });
+  const [url, setUrl] = useState(
+    'https://hn.algolia.com/api/v1/search?query=redux'
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsError(false);
+      setIsLoading(true);
+
+      try {
+        const result = await axios(url);
+
+        setData(result.data);
+      } catch (error) {
+        setIsError(true);
+      }
+
+      setIsLoading(false);
+    };
+    fetchData();
+  }, [url]);
+  return [{ data, isLoading, isError }, setUrl];
+};
